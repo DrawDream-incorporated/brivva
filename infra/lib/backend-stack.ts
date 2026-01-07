@@ -1,14 +1,4 @@
-import { Stack, StackProps, RemovalPolicy, Duration, CfnOutput } from 'aws-cdk-lib';
-import { Bucket, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
-import { 
-  Distribution, 
-  ViewerProtocolPolicy, 
-  CachePolicy, 
-  OriginProtocolPolicy, 
-  OriginRequestPolicy, 
-  AllowedMethods 
-} from 'aws-cdk-lib/aws-cloudfront';
-import { S3BucketOrigin, HttpOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import { 
   Vpc, 
   SubnetType, 
@@ -24,30 +14,27 @@ import {
   UserData 
 } from 'aws-cdk-lib/aws-ec2';
 import { Role, ServicePrincipal, ManagedPolicy } from 'aws-cdk-lib/aws-iam';
-import { HostedZone, ARecord, RecordTarget } from 'aws-cdk-lib/aws-route53';
-import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
-import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Construct } from 'constructs';
 
-export interface BrivvaStackProps extends StackProps {
-  domainName: string;
-  hostedZoneName: string;
-  certificateArn: string;
+export interface BackendStackProps extends StackProps {
   livespeechApiKey: string;
 }
 
-export class BrivvaStack extends Stack {
-  constructor(scope: Construct, id: string, props: BrivvaStackProps) {
+export class BackendStack extends Stack {
+  public readonly ec2PublicDnsName: string;
+  public readonly ec2InstanceId: string;
+
+  constructor(scope: Construct, id: string, props: BackendStackProps) {
     super(scope, id, props);
 
-    const { domainName, hostedZoneName, certificateArn, livespeechApiKey } = props;
+    const { livespeechApiKey } = props;
 
     // ===================
     // VPC
     // ===================
     const vpc = new Vpc(this, 'BrivvaVpc', {
       maxAzs: 2,
-      natGateways: 0, // Save cost - no NAT gateway needed
+      natGateways: 0,
       subnetConfiguration: [
         {
           cidrMask: 24,
@@ -66,14 +53,12 @@ export class BrivvaStack extends Stack {
       allowAllOutbound: true,
     });
 
-    // Allow HTTP from CloudFront (WebSocket upgrade)
     ec2SecurityGroup.addIngressRule(
       Peer.anyIpv4(),
       Port.tcp(8080),
       'Allow WebSocket from CloudFront'
     );
 
-    // Allow SSH for debugging (optional - remove in production)
     ec2SecurityGroup.addIngressRule(
       Peer.anyIpv4(),
       Port.tcp(22),
@@ -107,7 +92,7 @@ export class BrivvaStack extends Stack {
       'systemctl enable docker',
       'usermod -a -G docker ec2-user',
       '',
-      '# Install AWS CLI (should be pre-installed on AL2)',
+      '# Install AWS CLI',
       'yum install -y aws-cli jq',
       '',
       '# API key passed from CDK',
@@ -120,9 +105,12 @@ export class BrivvaStack extends Stack {
       '# Create .env file',
       'echo "LIVESPEECH_API_KEY=$API_KEY" > .env',
       '',
-      '# Pull and run the Docker container',
-      '# Note: You need to push your image to ECR first, or build locally',
-      '# For now, we will build from source',
+      '# Add 2GB swap (t4g.micro only has 1GB RAM)',
+      'fallocate -l 2G /swapfile',
+      'chmod 600 /swapfile',
+      'mkswap /swapfile',
+      'swapon /swapfile',
+      'echo "/swapfile swap swap defaults 0 0" >> /etc/fstab',
       '',
       '# Install Rust and build tools',
       'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
@@ -135,7 +123,7 @@ export class BrivvaStack extends Stack {
       'git clone https://github.com/DrawDream-incorporated/brivva.git /opt/brivva/repo',
       'cd /opt/brivva/repo/dataplane',
       'cp /opt/brivva/.env .',
-      '/root/.cargo/bin/cargo build --release',
+      '/root/.cargo/bin/cargo build --release -j 1',
       '',
       '# Create systemd service',
       'cat > /etc/systemd/system/brivva.service << EOF',
@@ -177,108 +165,27 @@ export class BrivvaStack extends Stack {
       userData,
     });
 
-    // ===================
-    // S3 Bucket for Frontend
-    // ===================
-    const websiteBucket = new Bucket(this, 'WebsiteBucket', {
-      bucketName: `brivva-frontend-${this.account}`,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-    });
-
-
-    // ===================
-    // Import ACM Certificate
-    // ===================
-    const certificate = Certificate.fromCertificateArn(
-      this,
-      'Certificate',
-      certificateArn
-    );
-
-    // ===================
-    // CloudFront Distribution
-    // ===================
-    const distribution = new Distribution(this, 'Distribution', {
-      defaultBehavior: {
-        origin: S3BucketOrigin.withOriginAccessControl(websiteBucket),
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-      },
-      additionalBehaviors: {
-        '/ws': {
-          origin: new HttpOrigin(ec2Instance.instancePublicDnsName, {
-            protocolPolicy: OriginProtocolPolicy.HTTP_ONLY,
-            httpPort: 8080,
-          }),
-          viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
-          cachePolicy: CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: OriginRequestPolicy.ALL_VIEWER,
-          allowedMethods: AllowedMethods.ALLOW_ALL,
-        },
-      },
-      domainNames: [domainName],
-      certificate,
-      defaultRootObject: 'index.html',
-      errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: Duration.minutes(0),
-        },
-        {
-          httpStatus: 403,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: Duration.minutes(0),
-        },
-      ],
-    });
-
-    // ===================
-    // Route53 A Record
-    // ===================
-    const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
-      domainName: hostedZoneName,
-    });
-
-    new ARecord(this, 'AliasRecord', {
-      zone: hostedZone,
-      recordName: domainName,
-      target: RecordTarget.fromAlias(
-        new CloudFrontTarget(distribution)
-      ),
-    });
+    this.ec2PublicDnsName = ec2Instance.instancePublicDnsName;
+    this.ec2InstanceId = ec2Instance.instanceId;
 
     // ===================
     // Outputs
     // ===================
-    new CfnOutput(this, 'WebsiteURL', {
-      value: `https://${domainName}`,
-      description: 'Website URL',
-    });
-
-    new CfnOutput(this, 'CloudFrontDistributionId', {
-      value: distribution.distributionId,
-      description: 'CloudFront Distribution ID',
-    });
-
-    new CfnOutput(this, 'S3BucketName', {
-      value: websiteBucket.bucketName,
-      description: 'S3 Bucket for frontend',
-    });
-
     new CfnOutput(this, 'EC2InstanceId', {
       value: ec2Instance.instanceId,
       description: 'EC2 Instance ID',
+      exportName: 'BrivvaBackendInstanceId',
+    });
+
+    new CfnOutput(this, 'EC2PublicDnsName', {
+      value: ec2Instance.instancePublicDnsName,
+      description: 'EC2 Public DNS Name',
+      exportName: 'BrivvaBackendPublicDns',
     });
 
     new CfnOutput(this, 'EC2PublicIP', {
       value: ec2Instance.instancePublicIp,
       description: 'EC2 Public IP',
     });
-
   }
 }

@@ -11,7 +11,7 @@ BUCKET_NAME="brivva-frontend-${ACCOUNT_ID}"
 
 # Get CloudFront distribution ID from CDK outputs
 echo "Getting CloudFront distribution ID..."
-DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name BrivvaStack --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" --output text --region us-east-1)
+DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name BrivvaFrontendStack --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" --output text --region us-east-1)
 
 if [ -z "$DISTRIBUTION_ID" ]; then
     echo "Error: Could not get CloudFront distribution ID. Make sure CDK stack is deployed."

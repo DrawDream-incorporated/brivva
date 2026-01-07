@@ -10,5 +10,11 @@
   "hosted-zone:account=992382639072:domainName=drawdream.ca:region=us-east-1": {
     "Id": "/hostedzone/Z05847981VG2ZYK4NQFNA",
     "Name": "drawdream.ca."
-  }
+  },
+  "availability-zones:account=992382639072:region=ap-northeast-2": [
+    "ap-northeast-2a",
+    "ap-northeast-2b",
+    "ap-northeast-2c",
+    "ap-northeast-2d"
+  ]
 }
