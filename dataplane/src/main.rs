@@ -138,6 +138,11 @@ async fn handle_socket(socket: WebSocket) {
 
     info!("Connected to LiveSpeech");
 
+    // Wait for connection to stabilize before starting session
+    // This gives the WebSocket time to be fully ready
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    info!("Connection stabilized, starting session...");
+
     // Start session with Korean to English translation prompt
     let session_config = SessionConfig::new(
         "You are a fast simultaneous interpreter. Translate constantly. Do not wait for long context. Keep answers short and immediate.",
