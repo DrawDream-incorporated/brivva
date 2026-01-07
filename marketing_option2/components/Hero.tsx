@@ -67,9 +67,9 @@ const Hero: React.FC = () => {
           </div>
 
           <div className="flex gap-4">
-            <button className="bg-white text-black px-8 py-4 font-bold tracking-widest hover:bg-gray-200 transition-colors uppercase text-sm">
-              Start Streaming
-            </button>
+            <a href="https://app-brivva.drawdream.ca" className="bg-white text-black px-8 py-4 font-bold tracking-widest hover:bg-gray-200 transition-colors uppercase text-sm">
+              Try Now
+            </a>
             <div className="border border-white/30 backdrop-blur-sm px-6 py-4 flex flex-col items-center justify-center">
                <span className="text-xs text-gray-400 uppercase">Latency</span>
                <span className="text-xl font-bold font-mono">&lt; 300ms</span>

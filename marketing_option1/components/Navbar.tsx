@@ -49,9 +49,9 @@ const Navbar: React.FC = () => {
             ))}
         </div>
 
-        <button className="hidden md:block px-6 py-2 bg-black text-white text-sm font-bold rounded-full hover:bg-gray-800 transition-colors shadow-lg">
-            Get Started
-        </button>
+        <a href="https://app-brivva.drawdream.ca" className="hidden md:block px-6 py-2 bg-black text-white text-sm font-bold rounded-full hover:bg-gray-800 transition-colors shadow-lg">
+            Try Now
+        </a>
       </div>
     </motion.nav>
   );

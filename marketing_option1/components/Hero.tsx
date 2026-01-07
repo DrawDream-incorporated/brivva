@@ -52,10 +52,13 @@ const Hero: React.FC = () => {
                 <p className="max-w-xs text-xl font-medium leading-snug mb-8 drop-shadow-sm text-gray-800">
                     SPEAK IN YOUR LANGUAGE. SELL IN THEIRS. THE FIRST AI TOOL FOR GLOBAL LIVE COMMERCE.
                 </p>
-                <button className="group bg-black text-white px-6 py-3 font-bold uppercase tracking-widest hover:bg-brand-cyan hover:text-black transition-all flex items-center gap-2 shadow-lg">
-                    Start Selling
+                <a 
+                    href="https://app-brivva.drawdream.ca" 
+                    className="group bg-black text-white px-6 py-3 font-bold uppercase tracking-widest hover:bg-brand-cyan hover:text-black transition-all flex items-center gap-2 shadow-lg"
+                >
+                    Try Now
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </a>
             </div>
         </div>
 
