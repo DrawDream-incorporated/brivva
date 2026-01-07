@@ -1,0 +1,15 @@
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local Amplify files
+amplify/.config/local-*
+amplify/team-provider-info.json
+aws-exports.js
+awsconfiguration.json
