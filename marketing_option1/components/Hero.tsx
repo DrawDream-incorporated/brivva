@@ -1,48 +1,15 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { GoogleGenAI } from "@google/genai";
 import { ArrowUp, ArrowRight } from 'lucide-react';
 
 const Hero: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
-  const [bgImage, setBgImage] = useState<string | null>(null);
   
   const yText = useTransform(scrollY, [0, 500], [0, 100]);
 
-  useEffect(() => {
-    const generateHeroBackground = async () => {
-      try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash-image',
-          contents: {
-            parts: [{
-              text: 'A professional, bright, and modern live streaming studio setup. High-tech camera gear, ring lights, and multiple monitors displaying analytics. Clean white workspace, soft daylight, shallow depth of field, bright and airy aesthetic. 8k resolution, photorealistic.'
-            }]
-          },
-          config: {
-             imageConfig: {
-                 aspectRatio: "16:9"
-             }
-          }
-        });
-
-        if (response.candidates?.[0]?.content?.parts) {
-          for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData) {
-              setBgImage(`data:image/png;base64,${part.inlineData.data}`);
-              break;
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Failed to generate background:", error);
-      }
-    };
-
-    generateHeroBackground();
-  }, []);
+  // Static high-quality image of a bright, modern studio setup
+  const bgImage = "https://images.unsplash.com/photo-1533750516457-a7f992034fec?q=80&w=2070&auto=format&fit=crop";
 
   return (
     <section ref={containerRef} className="relative h-screen w-full bg-white text-black overflow-hidden pt-20">
@@ -51,16 +18,14 @@ const Hero: React.FC = () => {
         {/* Fallback Gradient */}
         <div className="absolute inset-0 bg-gray-50" />
         
-        {/* AI Generated Image */}
-        {bgImage && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.5 }}
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
-            style={{ backgroundImage: `url(${bgImage})` }}
-          />
-        )}
+        {/* Static Image */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
+          style={{ backgroundImage: `url(${bgImage})` }}
+        />
         
         {/* Light Overlay to ensure text readability */}
         <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]" />
