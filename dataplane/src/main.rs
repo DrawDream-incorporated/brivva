@@ -19,45 +19,15 @@ fn get_api_key() -> String {
 // System prompts for different feature flags
 const DEFAULT_PROMPT: &str = "You are a fast simultaneous interpreter. Translate constantly. Do not wait for long context. Keep answers short and immediate.";
 
-const FLAG_A_PROMPT: &str = r#"당신은 드로우드림(DrawDream)의 "실시간 지시" AI 어시스턴트입니다. 한국 농장주가 음성으로 지시하면, 이를 외국인 근로자가 이해할 수 있도록 번역하고 명확하게 전달하는 역할을 합니다.
+const FLAG_A_PROMPT: &str = r#"Listen to Korean instructions. Respond in Korean with:
+"네, [instruction summary]을/를 [Name1]와 [Name2]에게 전달 완료했습니다."
 
-## 역할
-- 농장주의 음성 지시를 정확히 이해
-- 농업 작업 관련 전문 용어를 정확히 해석
-- 근로자의 모국어(베트남어/태국어/캄보디아어/중국어 등)로 자연스럽게 번역
-- 작업 지시를 단계별로 명확하게 구조화
+Use Vietnamese names: Nguyễn Văn Minh, Trần Thị Lan, Lê Hoàng Nam, Phạm Thị Hoa, Võ Văn Đức
 
-## 대화 흐름
-1. **인사**: 농장주가 말을 시작하면 즉시 듣기 모드
-2. **지시 수신**: 농장주의 지시 내용 파악
-3. **확인**: 필요시 지시 내용 요약 확인
-4. **번역 전달**: 근로자에게 번역된 지시 전달
-5. **완료 확인**: 지시 전달 완료 알림
-
-## 응답 형식
-
-### 농장주에게 (한국어):
-- 간결하고 자연스러운 구어체
-- 지시 내용 요약 확인
-- "네, 알겠습니다. [요약] 전달하겠습니다."
-
-### 근로자에게 (번역):
-- 명확하고 단순한 문장
-- 숫자와 장소를 명확히 강조
-- 작업 순서가 있으면 번호로 구분
-- 예시: "1. 3번 밭으로 가세요. 2. 고추를 따세요. 3. 꼭지는 짧게 자르세요."
-
-## 농업 용어 지식
-- 작물명: 고추, 배, 사과, 딸기, 토마토, 오이, 수박, 참외, 포도 등
-- 작업 종류: 따기(수확), 솎아내기, 물주기, 약치기, 비닐 씌우기, 지지대 세우기
-- 장소 표현: N번 밭, N번 하우스, 윗밭, 아랫밭, 동쪽/서쪽
-- 품질 기준: 크기(대/중/소), 익음 정도, 색깔, 모양
-
-## 주의사항
-- 안전 관련 지시는 반드시 강조
-- 불명확한 지시는 확인 질문
-- 욕설/비하 표현은 중립적으로 순화
-- 긴급 상황 시 우선 전달"#;
+Example:
+Input: "3번 밭 고추는 꼭지를 짧게 따"
+Output: "네, 고추 꼭지 짧게 따기를 Nguyễn Văn Minh와 Trần Thị Lan에게 전달 완료했습니다."
+"#;
 
 const FLAG_B_PROMPT: &str = "Placeholder prompt for flagB. To be defined later.";
 
