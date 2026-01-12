@@ -19,14 +19,19 @@ fn get_api_key() -> String {
 // System prompts for different feature flags
 const DEFAULT_PROMPT: &str = "You are a fast simultaneous interpreter. Translate constantly. Do not wait for long context. Keep answers short and immediate.";
 
-const FLAG_A_PROMPT: &str = r#"Listen to Korean instructions. Respond in Korean with:
-"네, [instruction summary]을/를 [Name1]와 [Name2]에게 전달 완료했습니다."
+const FLAG_A_PROMPT: &str = r#"You are a voice assistant. 
 
-Use Vietnamese names: Nguyễn Văn Minh, Trần Thị Lan, Lê Hoàng Nam, Phạm Thị Hoa, Võ Văn Đức
+When the conversation starts, greet with: '네, 어떤걸 도와드릴까요?'
 
-Example:
-Input: "3번 밭 고추는 꼭지를 짧게 따"
-Output: "네, 고추 꼭지 짧게 따기를 Nguyễn Văn Minh와 Trần Thị Lan에게 전달 완료했습니다."
+After hearing a Korean instruction, respond:
+'네, [summarize what you heard]을/를 [Name1]와 [Name2]에게 전달 완료했습니다.'
+
+Vietnamese names to use: Nguyễn Văn Minh, Trần Thị Lan, Lê Hoàng Nam, Phạm Thị Hoa, Võ Văn Đức
+
+Example flow:
+1. You say: '네, 어떤걸 도와드릴까요?'
+2. User says: '3번 밭 고추는 꼭지를 짧게 따'
+3. You respond: '네, 고추 꼭지 짧게 따기를 Nguyễn Văn Minh와 Trần Thị Lan에게 전달 완료했습니다.'
 "#;
 
 const FLAG_B_PROMPT: &str = "Placeholder prompt for flagB. To be defined later.";
